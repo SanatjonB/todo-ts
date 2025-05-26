@@ -5,6 +5,7 @@ function App() {
   type Task = {
     text: string;
     completed: boolean;
+    createdAt: string;
   };
 
   const [task, setTask] = useState("");
@@ -53,7 +54,11 @@ function App() {
       <button
         onClick={(e) => {
           if (task.trim() === "") return;
-          const newTasks = { text: task, completed: false };
+          const newTasks = {
+            text: task,
+            completed: false,
+            createdAt: new Date().toISOString(),
+          };
           setTasks((prev) => [...prev, newTasks]);
         }}
       >
@@ -67,11 +72,13 @@ function App() {
           <li
             key={i}
             style={{
-              textDecoration: task_.completed ? "line-through" : "none",
               marginBottom: "10px",
             }}
           >
-            {task_.text}
+            <div>{task_.text}</div>
+            <div style={{ fontSize: "0.8em", color: "gray" }}>
+              Added: {new Date(task_.createdAt).toLocaleString()}
+            </div>
             <button
               onClick={() => {
                 const completedTask = { ...tasks[i], completed: true };
@@ -103,6 +110,18 @@ function App() {
             style={{ color: "gray", textDecoration: "line-through" }}
           >
             {task.text}
+            <button
+              onClick={() => {
+                const taskToUndo = doneTasks[index];
+                setDoneTasks((prev) => prev.filter((_, i) => i !== index));
+                setTasks((prev) => [
+                  ...prev,
+                  { ...taskToUndo, completed: false },
+                ]);
+              }}
+            >
+              🔄 Undo
+            </button>
           </li>
         ))}
       </ul>
