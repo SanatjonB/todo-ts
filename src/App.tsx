@@ -5,14 +5,23 @@ function App() {
   type Task = {
     text: string;
     completed: boolean;
-    createdAt: string;
+    dueAt: string;
   };
 
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [doneTasks, setDoneTasks] = useState<Task[]>([]);
+  const [dueIn, setDueIn] = useState("20");
+  const [tick, setTick] = useState(0);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1); // force re-render every second
+    }, 1000);
+
+    return () => clearInterval(interval); // cleanup on unmount
+  }, []);
   useEffect(() => {
     const saved = localStorage.getItem("tasks");
     const savedDone = localStorage.getItem("doneTasks");
@@ -51,13 +60,29 @@ function App() {
           setTask(e.target.value);
         }}
       />
+      <label style={{ marginLeft: "10px" }}>
+        Due in (seconds):{" "}
+        <input
+          type="number"
+          placeholder="e.g. 30"
+          value={dueIn}
+          onChange={(e) => setDueIn(e.target.value)}
+          style={{
+            marginLeft: "5px",
+            width: "80px",
+            padding: "4px",
+            fontSize: "14px",
+          }}
+        />
+      </label>
       <button
         onClick={(e) => {
-          if (task.trim() === "") return;
+          if (task.trim() === "" || isNaN(Number(dueIn)) || Number(dueIn) <= 0)
+            return;
           const newTasks = {
             text: task,
             completed: false,
-            createdAt: new Date().toISOString(),
+            dueAt: new Date(Date.now() + Number(dueIn) * 1000).toISOString(),
           };
           setTasks((prev) => [...prev, newTasks]);
         }}
@@ -68,39 +93,52 @@ function App() {
       {/* The list here  */}
       <h3>Active Tasks</h3>
       <ul>
-        {tasks.map((task_, i) => (
-          <li
-            key={i}
-            style={{
-              marginBottom: "10px",
-            }}
-          >
-            <div>{task_.text}</div>
-            <div style={{ fontSize: "0.8em", color: "gray" }}>
-              Added: {new Date(task_.createdAt).toLocaleString()}
-            </div>
-            <button
-              onClick={() => {
-                const completedTask = { ...tasks[i], completed: true };
-                setTasks((prev) => prev.filter((_, index) => index !== i));
-                setDoneTasks((prev) => [...prev, completedTask]);
+        {tasks.map((task_, i) => {
+          const isOverdue = new Date(task_.dueAt).getTime() < Date.now();
+
+          return (
+            <li
+              key={i}
+              style={{
+                marginBottom: "10px",
+                backgroundColor: isOverdue ? "#ffcccc" : "white",
+                padding: "10px",
+                borderRadius: "6px",
               }}
-              style={{ marginLeft: "10px" }}
             >
-              ✔️
-            </button>
-            <button
-              onClick={() => {
-                const updated = [...tasks];
-                updated.splice(i, 1);
-                setTasks(updated);
-              }}
-              style={{ marginLeft: "5px" }}
-            >
-              ❌
-            </button>
-          </li>
-        ))}
+              <div>{task_.text}</div>
+              {isOverdue && (
+                <div style={{ color: "red", fontSize: "0.8em" }}>
+                  ⚠️ Due Now!
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  const completedTask = {
+                    ...task_,
+                    completed: true,
+                    completedAt: new Date().toISOString(),
+                  };
+                  setTasks((prev) => prev.filter((_, index) => index !== i));
+                  setDoneTasks((prev) => [...prev, completedTask]);
+                }}
+                style={{ marginLeft: "10px" }}
+              >
+                ✔️
+              </button>
+              <button
+                onClick={() => {
+                  const updated = [...tasks];
+                  updated.splice(i, 1);
+                  setTasks(updated);
+                }}
+                style={{ marginLeft: "5px" }}
+              >
+                ❌
+              </button>
+            </li>
+          );
+        })}
       </ul>
       <h3 style={{ marginTop: "30px" }}>✅ Done</h3>
       <ul>
@@ -109,7 +147,7 @@ function App() {
             key={index}
             style={{ color: "gray", textDecoration: "line-through" }}
           >
-            {task.text}
+            <div>{task.text}</div>
             <button
               onClick={() => {
                 const taskToUndo = doneTasks[index];
