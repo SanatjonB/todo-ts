@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { link } from "fs";
 
 function App() {
   type Task = {
@@ -15,9 +14,18 @@ function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem("tasks");
-    console.log("Loading local storage " + saved);
+    const savedDone = localStorage.getItem("doneTasks");
+    console.log(
+      "Loading local storage of active tasks" +
+        saved +
+        " and done tasks " +
+        doneTasks
+    );
     if (saved) {
       setTasks(JSON.parse(saved));
+    }
+    if (savedDone) {
+      setDoneTasks(JSON.parse(savedDone));
     }
     setLoaded(true);
   }, []);
@@ -25,9 +33,10 @@ function App() {
   useEffect(() => {
     if (loaded) {
       localStorage.setItem("tasks", JSON.stringify(tasks));
+      localStorage.setItem("doneTasks", JSON.stringify(doneTasks));
     }
     console.log("Saved to localStorage:", tasks);
-  }, [tasks, loaded]);
+  }, [tasks, loaded, doneTasks]);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -46,11 +55,6 @@ function App() {
           if (task.trim() === "") return;
           const newTasks = { text: task, completed: false };
           setTasks((prev) => [...prev, newTasks]);
-
-          setTimeout(() => {
-            setTasks((prev) => prev.filter((task) => task !== newTasks));
-            setDoneTasks((prev) => [...prev, { ...newTasks, completed: true }]);
-          }, 5000);
         }}
       >
         Add
@@ -70,8 +74,9 @@ function App() {
             {task_.text}
             <button
               onClick={() => {
-                const updated = tasks.filter((_, index) => index !== i);
-                setTasks(updated);
+                const completedTask = { ...tasks[i], completed: true };
+                setTasks((prev) => prev.filter((_, index) => index !== i));
+                setDoneTasks((prev) => [...prev, completedTask]);
               }}
               style={{ marginLeft: "10px" }}
             >
