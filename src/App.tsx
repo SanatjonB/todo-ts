@@ -14,7 +14,7 @@ function App() {
   const [doneTasks, setDoneTasks] = useState<Task[]>([]);
   const [dueIn, setDueIn] = useState("1");
   const [tick, setTick] = useState(0);
-  const [dueUnit, setDueUnit] = useState("Days");
+  const [dueUnit, setDueUnit] = useState("days");
 
   useEffect(() => {
     const interval = setInterval(() => {
