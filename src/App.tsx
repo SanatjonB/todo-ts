@@ -12,8 +12,9 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [doneTasks, setDoneTasks] = useState<Task[]>([]);
-  const [dueIn, setDueIn] = useState("20");
+  const [dueIn, setDueIn] = useState("1");
   const [tick, setTick] = useState(0);
+  const [dueUnit, setDueUnit] = useState("Days");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,8 +51,8 @@ function App() {
 
   return (
     <div style={{ padding: "20px" }}>
+      {/* title and inputs  */}
       <h2>My To-Do Lists</h2>
-
       <input
         type="text"
         placeholder="Type something..."
@@ -61,30 +62,52 @@ function App() {
         }}
       />
       <label style={{ marginLeft: "10px" }}>
-        Due in (seconds):{" "}
+        Due in:
         <input
           type="number"
-          placeholder="e.g. 30"
           value={dueIn}
           onChange={(e) => setDueIn(e.target.value)}
           style={{
             marginLeft: "5px",
-            width: "80px",
+            width: "60px",
             padding: "4px",
             fontSize: "14px",
           }}
         />
+        <select
+          value={dueUnit}
+          onChange={(e) => setDueUnit(e.target.value)}
+          style={{
+            marginLeft: "5px",
+            padding: "4px",
+            fontSize: "14px",
+          }}
+        >
+          <option value="seconds">sec</option>
+          <option value="hours">hr</option>
+          <option value="days">day</option>
+        </select>
       </label>
+
+      {/* Add button */}
       <button
         onClick={(e) => {
           if (task.trim() === "" || isNaN(Number(dueIn)) || Number(dueIn) <= 0)
             return;
+          const unitMultipliers: Record<string, number> = {
+            seconds: 1,
+            hours: 3600,
+            days: 86400,
+          };
+          const seconds =
+            Number(dueIn) * unitMultipliers[dueUnit.toLowerCase()];
+          const dueAt = new Date(Date.now() + seconds * 1000).toISOString();
+          setTasks((prev) => [...prev, newTasks]);
           const newTasks = {
             text: task,
             completed: false,
-            dueAt: new Date(Date.now() + Number(dueIn) * 1000).toISOString(),
+            dueAt,
           };
-          setTasks((prev) => [...prev, newTasks]);
         }}
       >
         Add
@@ -95,6 +118,23 @@ function App() {
       <ul>
         {tasks.map((task_, i) => {
           const isOverdue = new Date(task_.dueAt).getTime() < Date.now();
+          const timeLeftMs = new Date(task_.dueAt).getTime() - Date.now();
+          let timeLeftStr = "";
+
+          if (!isOverdue) {
+            const totalSec = Math.floor(timeLeftMs / 1000);
+            const hr = Math.floor(totalSec / 3600);
+            const min = Math.floor((totalSec % 3600) / 60);
+            const sec = totalSec % 60;
+
+            if (hr > 0) {
+              timeLeftStr = `${hr} hr${hr !== 1 ? "s" : ""} ${min} min`;
+            } else if (min > 0) {
+              timeLeftStr = `${min} min ${sec} sec`;
+            } else {
+              timeLeftStr = `${sec} sec`;
+            }
+          }
 
           return (
             <li
@@ -107,6 +147,11 @@ function App() {
               }}
             >
               <div>{task_.text}</div>
+              {!isOverdue && (
+                <div style={{ color: "#888", fontSize: ".8em" }}>
+                  {timeLeftStr}
+                </div>
+              )}
               {isOverdue && (
                 <div style={{ color: "red", fontSize: "0.8em" }}>
                   ⚠️ Due Now!
