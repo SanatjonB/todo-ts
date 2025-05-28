@@ -20,10 +20,10 @@ function App() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTick((prev) => prev + 1); // force re-render every second
+      setTick((prev) => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval); // cleanup on unmount
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
     const saved = localStorage.getItem("tasks");
