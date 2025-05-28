@@ -6,6 +6,7 @@ function App() {
     text: string;
     completed: boolean;
     dueAt: string;
+    priority: "low" | "medium" | "high";
   };
 
   const [task, setTask] = useState("");
@@ -15,6 +16,7 @@ function App() {
   const [dueIn, setDueIn] = useState("1");
   const [tick, setTick] = useState(0);
   const [dueUnit, setDueUnit] = useState("days");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,6 +90,20 @@ function App() {
           <option value="days">day</option>
         </select>
       </label>
+      <label style={{ marginLeft: "10px" }}>
+        Priority:
+        <select
+          value={priority}
+          onChange={(e) =>
+            setPriority(e.target.value as "low" | "medium" | "high")
+          }
+          style={{ marginLeft: "5px", padding: "4px", fontSize: "14px" }}
+        >
+          <option value="low">🟢 Low</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="high">🔴 High</option>
+        </select>
+      </label>
 
       {/* Add button */}
       <button
@@ -107,6 +123,7 @@ function App() {
             text: task,
             completed: false,
             dueAt,
+            priority,
           };
         }}
       >
@@ -157,6 +174,22 @@ function App() {
                   ⚠️ Due Now!
                 </div>
               )}
+              <div style={{ fontSize: ".8em", marginTop: "4px" }}>
+                Priority:{" "}
+                <span
+                  style={{
+                    color:
+                      task_.priority === "high"
+                        ? "red"
+                        : task_.priority === "medium"
+                        ? "orange"
+                        : "green",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {task_.priority}
+                </span>
+              </div>
               <button
                 onClick={() => {
                   const completedTask = {
