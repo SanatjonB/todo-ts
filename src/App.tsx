@@ -17,6 +17,7 @@ function App() {
   const [tick, setTick] = useState(0);
   const [dueUnit, setDueUnit] = useState("days");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
+  const [xp, setXp] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,6 +51,14 @@ function App() {
     }
     console.log("Saved to localStorage:", tasks);
   }, [tasks, loaded, doneTasks]);
+
+  const getLevel = (xp: number) => {
+    if (xp >= 100) return "🧓 Elder";
+    if (xp >= 50) return "🧔 Adult";
+    if (xp >= 25) return "🧒 Teen";
+    if (xp >= 10) return "👶 Child";
+    return "🐣 Baby";
+  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -118,13 +127,13 @@ function App() {
           const seconds =
             Number(dueIn) * unitMultipliers[dueUnit.toLowerCase()];
           const dueAt = new Date(Date.now() + seconds * 1000).toISOString();
-          setTasks((prev) => [...prev, newTasks]);
           const newTasks = {
             text: task,
             completed: false,
             dueAt,
             priority,
           };
+          setTasks((prev) => [...prev, newTasks]);
         }}
       >
         Add
@@ -190,6 +199,7 @@ function App() {
                   {task_.priority}
                 </span>
               </div>
+              {/* Add button */}
               <button
                 onClick={() => {
                   const completedTask = {
@@ -198,6 +208,13 @@ function App() {
                     completedAt: new Date().toISOString(),
                   };
                   setTasks((prev) => prev.filter((_, index) => index !== i));
+                  const gain =
+                    task_.priority === "high"
+                      ? 3
+                      : task_.priority === "medium"
+                      ? 1
+                      : 0.5;
+                  setXp((prev) => prev + gain);
                   setDoneTasks((prev) => [...prev, completedTask]);
                 }}
                 style={{ marginLeft: "10px" }}
@@ -218,6 +235,23 @@ function App() {
           );
         })}
       </ul>
+      <div
+        style={{
+          marginTop: "30px",
+          padding: "10px",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+        }}
+      >
+        <h3>🐾 Your Companion</h3>
+        <div>
+          XP: <strong>{xp.toFixed(1)}</strong>
+        </div>
+        <div>
+          Stage: <strong>{getLevel(xp)}</strong>
+        </div>
+      </div>
+
       <h3 style={{ marginTop: "30px" }}>✅ Done</h3>
       <ul>
         {doneTasks.map((task, index) => (
